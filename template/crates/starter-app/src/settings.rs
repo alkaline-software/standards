@@ -28,7 +28,7 @@ use crate::widgets::{choice_pill, kanji, page_in, small_pill, wordmark, Press};
 /// The window's size as it opens, and the least it is dragged to. It is
 /// never narrower than it opens: the rows are laid out for that width,
 /// and narrower, names broke mid-word. Shorter, the page scrolls.
-pub const SETTINGS_W: Pixels = px(820.);
+pub const SETTINGS_W: Pixels = px(860.);
 pub const SETTINGS_H: Pixels = px(600.);
 /// About's name in kanji, for a product with a Japanese name (`Some("絵巻")`);
 /// a product with an English name has none.
