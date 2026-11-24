@@ -38,12 +38,16 @@ pub const REVEAL_LABEL: &str = if cfg!(target_os = "macos") {
 };
 
 /// The Dock icon, for a bare binary run from `target/`. A bundle carries
-/// the same picture as its `.icns`.
+/// the same picture as its `.icns` and is left to it: decoding the PNG
+/// took 60 ms of every launch and held 32 MB for the app's life.
 #[cfg(target_os = "macos")]
 pub fn install_dock_icon() {
     use objc2::{AllocAnyThread as _, MainThreadMarker};
     use objc2_app_kit::{NSApplication, NSImage};
     use objc2_foundation::NSData;
+    if objc2_foundation::NSBundle::mainBundle().bundleIdentifier().is_some() {
+        return;
+    }
     let Some(mtm) = MainThreadMarker::new() else { return };
     let data = NSData::with_bytes(include_bytes!("../assets/icon/icon-1024.png"));
     if let Some(image) = NSImage::initWithData(NSImage::alloc(), &data) {
@@ -52,6 +56,20 @@ pub fn install_dock_icon() {
 }
 #[cfg(not(target_os = "macos"))]
 pub fn install_dock_icon() {}
+
+/// Whether the system has a font family of this name, asked for that
+/// family alone. On the main thread. Elsewhere it is not asked so, and
+/// the caller lists the families.
+#[cfg(target_os = "macos")]
+pub fn has_font_family(name: &str) -> Option<bool> {
+    let mtm = objc2::MainThreadMarker::new()?;
+    let fonts = objc2_app_kit::NSFontManager::sharedFontManager(mtm);
+    Some(fonts.availableMembersOfFontFamily(&objc2_foundation::NSString::from_str(name)).is_some())
+}
+#[cfg(not(target_os = "macos"))]
+pub fn has_font_family(_name: &str) -> Option<bool> {
+    None
+}
 
 /// The native window's own ground, under everything the app draws. gpui
 /// leaves it the system's, near white in the light appearance, and it

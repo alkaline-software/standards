@@ -37,6 +37,9 @@ A speed-up starts from a number and ends with another. The stopwatch goes in a c
 - **A rate:** the app's CPU time and the window server's over the same seconds, doing nothing, as it was, and as it is. Frames cost the window server too, and with no baseline to take off, a saving does not show.
 - **Work on the GPU:** a call that hands it work returns before the work is done, and the wait shows up under whatever comes next. Wait for it (`llama_synchronize`) before the clock stops.
 - **What grows with use:** rows made up for the purpose at a size the person has and at several times it, never the person's own words.
+- **Memory:** the physical footprint (`footprint <pid>`), never the resident size `top` and `ps` give. A window's drawing surfaces are IOSurfaces, which those leave out: a leak of 2 GB read there as 207 MB. `heap <pid>` counts the live objects of each Objective-C class (`GPUIView`, `CAMetalLayer`).
+- **A window opened and closed** many times by a task in the copy (`remove_window`, then the window opened again), the footprint read before and after. A closed window that keeps its surfaces shows only so.
+- **Launch:** the time from `main` to the first frame painted, and to each step of start-up between. A bundle's launch differs from a bare binary's (the Dock icon, the app's own defaults), so it is timed in a copy of the dev bundle with the build put in it and signed ad hoc (`codesign -s - --force --deep`).
 - **Nothing lost:** what the product gives is compared with the old build's, word for word, kept beside the new one.
 
 ## The core from a terminal

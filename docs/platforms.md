@@ -19,7 +19,7 @@ How a product works on macOS, Windows and Linux, each on Intel-class and ARM mac
 - **The dev build is a bundle too** (`scripts/dev-app.sh`): `target/debug/dev.noindex/<App>.app`, opened through the system, signed with the developer's identity when the keychain has one. A bare executable opened from the Dock or Finder runs inside the default terminal app and every child it starts inherits that terminal's marks; a build signed by nobody is a new app to Privacy & Security after every build. `.noindex` keeps Spotlight from listing a second copy.
 - **The window's own background** is set to the frame's color (`sys::set_window_ground`), or it is near white under a dark frame while the window is drawn or resized.
 - **The installer** is a disk image, signed with the Developer ID, notarized and stapled (`docs/workflow.md`, The disk image).
-- **The app's icon** is `.icns` at the full square, since macOS 26 masks it to its own rounded square (`docs/design.md`, The app icon).
+- **The app's icon** is `.icns` at the full square, since macOS 26 masks it to its own rounded square (`docs/design.md`, The app icon). A bundle's Dock shows it; only a bare binary run from `target/` is handed the PNG at launch (`sys::install_dock_icon`). Decoded in a bundle too, the 1024 PNG took 60 ms of every launch and held 32 MB for the app's life.
 
 ## Windows
 
