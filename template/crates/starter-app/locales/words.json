@@ -611,15 +611,6 @@
     "de": "Widerrufen",
     "es": "Deshacer"
   },
-  "Up to date.": {
-    "zh-Hans": "已是最新版本。",
-    "zh-Hant": "已是最新版本。",
-    "ja": "最新です。",
-    "ko": "최신 버전입니다.",
-    "fr": "À jour.",
-    "de": "Auf dem neuesten Stand.",
-    "es": "Está al día."
-  },
   "Update to {version}": {
     "zh-Hans": "更新到 {version}",
     "zh-Hant": "更新到 {version}",
@@ -727,5 +718,41 @@
     "fr": "Site web",
     "de": "Website",
     "es": "Sitio web"
+  },
+  "Up to date": {
+    "zh-Hans": "已是最新版本",
+    "zh-Hant": "已是最新版本",
+    "ja": "最新です",
+    "ko": "최신 버전",
+    "fr": "À jour",
+    "de": "Aktuell",
+    "es": "Al día"
+  },
+  "Checking…": {
+    "zh-Hans": "正在检查…",
+    "zh-Hant": "正在檢查…",
+    "ja": "確認中…",
+    "ko": "확인 중…",
+    "fr": "Recherche…",
+    "de": "Wird gesucht…",
+    "es": "Buscando…"
+  },
+  "Check failed": {
+    "zh-Hans": "检查失败",
+    "zh-Hant": "檢查失敗",
+    "ja": "確認できませんでした",
+    "ko": "확인 실패",
+    "fr": "Échec de la recherche",
+    "de": "Suche fehlgeschlagen",
+    "es": "Error al buscar"
+  },
+  "Update failed": {
+    "zh-Hans": "更新失败",
+    "zh-Hant": "更新失敗",
+    "ja": "アップデートできませんでした",
+    "ko": "업데이트 실패",
+    "fr": "Échec de la mise à jour",
+    "de": "Update fehlgeschlagen",
+    "es": "Error al actualizar"
   }
 }

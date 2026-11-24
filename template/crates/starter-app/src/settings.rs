@@ -15,6 +15,7 @@ use std::time::Duration;
 use gpui::prelude::FluentBuilder as _;
 use gpui::*;
 use gpui_component::scroll::ScrollableElement as _;
+use gpui_component::tooltip::ManagedTooltipExt as _;
 use gpui_component::{h_flex, v_flex, ActiveTheme as _, Icon, Sizable as _};
 
 use starter_core::config::Config;
@@ -22,8 +23,8 @@ use starter_core::update;
 
 use crate::i18n::{phrase, t, tf, weave};
 use crate::menu::Entry;
-use crate::shell::{Escape, OpenSettings, Shell};
-use crate::widgets::{choice_pill, kanji, page_in, small_pill, wordmark, Press};
+use crate::shell::{Escape, OpenSettings, Outcome, Shell};
+use crate::widgets::{choice_pill, kanji, page_in, small_pill, tip, wordmark, Press};
 
 /// The window's size as it opens, and the least it is dragged to. It is
 /// never narrower than it opens: the rows are laid out for that width,
@@ -44,6 +45,11 @@ const TOP_H: Pixels = px(52.);
 /// start and end together.
 const CONTROL_W: Pixels = px(336.);
 const CONTROL_H: Pixels = px(28.);
+/// Controls whose words change with their state, each in one width that
+/// holds its longest words in every language, so a press that changes the
+/// words moves no edge (`docs/design.md`, A press moves nothing).
+const UPDATE_W: Pixels = px(224.);
+const LANG_W: Pixels = px(128.);
 const CARD_R: Pixels = px(12.);
 pub const SETTINGS_CONTEXT: &str = "Settings";
 
@@ -388,14 +394,25 @@ impl Shell {
             .when_some(SITE, |d, url| d.child(small_pill("about-site", "icons/globe.svg", t("Website"), Press::Quiet, false, &theme).h(px(28.)).on_click(move |_, _, _| crate::sys::open(url))))
             .child(small_pill("about-source", "icons/github.svg", "GitHub", Press::Quiet, false, &theme).h(px(28.)).on_click(|_, _, _| crate::sys::open(&update::repo_page())))
             .child(small_pill("about-notes", "icons/file-text.svg", t("Release Notes"), Press::Quiet, false, &theme).h(px(28.)).on_click(|_, _, _| crate::sys::open(&update::release_page(update::current_version()))));
+        // Every state of the check is the button's own label, in one
+        // width: a line under the row's name grew the card at the press. A
+        // failure's reason is in the button's tooltip.
         let u = self.update.clone();
-        let (icon, words, kind) = match (&u.found, u.downloading) {
-            (_, Some(p)) => ("icons/download.svg", tf("Downloading… {percent}%", &[("percent", &p)]), Press::Primary),
-            (Some(v), None) => ("icons/download.svg", tf("Update to {version}", &[("version", v)]), Press::Primary),
-            (None, None) => ("icons/refresh.svg", t("Check for updates").to_string(), Press::Quiet),
+        let (icon, words, kind) = match (&u.found, u.downloading, u.checking, &u.outcome) {
+            (_, Some(p), _, _) => ("icons/download.svg", tf("Downloading… {percent}%", &[("percent", &p)]), Press::Primary),
+            (_, None, true, _) => ("icons/refresh.svg", t("Checking…").to_string(), Press::Quiet),
+            (Some(_), None, false, Some(Outcome::InstallFailed(_))) => ("icons/triangle-alert.svg", t("Update failed").to_string(), Press::Primary),
+            (Some(v), None, false, _) => ("icons/download.svg", tf("Update to {version}", &[("version", v)]), Press::Primary),
+            (None, None, false, Some(Outcome::UpToDate)) => ("icons/check.svg", t("Up to date").to_string(), Press::Quiet),
+            (None, None, false, Some(Outcome::CheckFailed(_))) => ("icons/triangle-alert.svg", t("Check failed").to_string(), Press::Quiet),
+            (None, None, false, _) => ("icons/refresh.svg", t("Check for updates").to_string(), Press::Quiet),
+        };
+        let reason = match &u.outcome {
+            Some(Outcome::CheckFailed(why) | Outcome::InstallFailed(why)) if !u.checking && u.downloading.is_none() => Some(SharedString::from(why.clone())),
+            _ => None,
         };
         let busy = u.checking || u.downloading.is_some();
-        let button = choice_pill("update", icon, words, kind, busy, &theme).min_w(px(190.)).justify_center().when(!busy, |d| {
+        let button = choice_pill("update", icon, words, kind, busy, &theme).w(UPDATE_W).justify_center().when_some(reason, |d, why| d.managed_tooltip(move |window, cx| tip(why.clone(), window, cx))).when(!busy, |d| {
             d.on_click(cx.listener(|this, _, _, cx| {
                 if this.update.found.is_some() {
                     this.install_update(cx);
@@ -404,7 +421,6 @@ impl Shell {
                 }
             }))
         });
-        let said = u.said.clone().map(SharedString::from);
         let check = self.motion.switch(
             "check-updates",
             self.cfg.app.check_updates,
@@ -417,7 +433,7 @@ impl Shell {
         );
         let mut rows = vec![group(None, None, vec![title.into_any_element()], &theme), pills.into_any_element()];
         if !update::from_store() {
-            rows.push(div().w_full().pt(px(12.)).child(group(None, None, vec![line(t("Updates").into(), said, button.into_any_element(), &theme), line(t("Check automatically").into(), None, check, &theme)], &theme)).into_any_element());
+            rows.push(div().w_full().pt(px(12.)).child(group(None, None, vec![line(t("Updates").into(), None, button.into_any_element(), &theme), line(t("Check automatically").into(), None, check, &theme)], &theme)).into_any_element());
         }
         rows
     }
@@ -432,8 +448,12 @@ impl Shell {
             Some((_, flag, letters)) => (*flag, letters.to_string(), true),
             None => ("icons/globe.svg", t("System").to_string(), false),
         };
+        // One width for every language it can name: a pick from its list
+        // changes its words and moves none of its edges.
         h_flex()
             .id("language-pill")
+            .w(LANG_W)
+            .justify_center()
             .h(CONTROL_H)
             .px(px(12.))
             .gap(px(7.))

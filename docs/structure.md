@@ -37,7 +37,7 @@ How an Alkaline Software product is put together: the stack, the workspace, the 
 | `crates/<app>-app/macos/`, `windows/`, `linux/` | what each system's package needs: the `Info.plist` additions, the Store's manifest and tiles, the snap's metadata and desktop file |
 | `vendor/` | the toolkit and any crate that had to be changed, each with an `UPSTREAM.md` |
 | `docs/` | how each part works and its traps, one file a part (`docs/docs.md`); `release.md`, how to cut a release; `probing.md`, how to look at the window from a script |
-| `scripts/` | the dev build, the icon, the README's picture, the release (`docs/workflow.md`) |
+| `scripts/` | the dev build, the icon, the README's picture, the release (`docs/workflow.md`), and the checks on a press and a corner (`press-diff.R`, `corners.R`) |
 | `.github/workflows/` | `rust.yml` on every push, `release.yml` on a tag |
 
 Nothing else at the root. A plan or a roadmap kept as a file goes stale the week it is written; what is so now is in `docs/`, and what each release changed is in `CHANGELOG.md`.
@@ -85,4 +85,5 @@ Every product can be driven from a script, so a change is looked at by an agent 
 - `<APP>_SHOT=<file>` writes a picture of the window once it is drawn, then quits. A process may take a picture of its own windows without Screen Recording access.
 - A synthetic click does not reach a background window, so a picture of the state a click leads to does not show the click works. Say what was checked and what was not.
 - Memory is the physical footprint (`footprint <pid>`), never the resident size `top` and `ps` give: a window's drawing surfaces are IOSurfaces, which those leave out, and a leak of 2 GB read there as 207 MB. A window is opened and closed many times over and the footprint read after, since a closed window that keeps its surfaces shows no other way.
+- A press is shot before and after, and the two pictures compared (`scripts/press-diff.R`): what differs sits inside the control pressed, or the press moved the layout. Every rounded box's corners are cut out and enlarged (`scripts/corners.R`), in both appearances, since a sharp corner does not show in a picture of the whole window (`docs/design.md`, A press moves nothing, No sharp corners).
 - Speed is measured before it is worked on, and again after, with a stopwatch in a copy that is taken out when it is done (`docs/probing.md`, Measuring). The first guess is often wrong: a change that looked right saved nothing until it was timed, and a cost that looked like a slow frame was a wait outside any frame.

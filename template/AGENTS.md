@@ -7,6 +7,8 @@
 ## Rules that hold everywhere
 
 - **Nothing jumps.** What appears, goes, opens, closes, grows or moves does so over a moment, with the pattern its neighbors use (`widgets.rs`, `menu.rs`, `shell.rs`). No pause at the end of a motion.
+- **A press moves nothing.** A press changes what is in its own place and nothing else: no row, card, pill or page grows, shrinks or moves by a pixel, in any direction. What it has to say goes in room that is there in every state (the button's own words, a line under the row in every state, a tooltip), and a control whose words change is one width in every language (`UPDATE_W`, `LANG_W` in `settings.rs`, `WORK_W` in `shell.rs`). Checked before and after the press (`scripts/press-diff.R`, `docs/probing.md`).
+- **No sharp corners.** A rounded box is round at every corner whatever is drawn in it. gpui clips content to the rectangle, never the rounded corner, so a box whose content reaches a corner lays `widgets::round_corners` last, in the opaque color seen around it (the page card, the box of rows). Checked enlarged (`scripts/corners.R`, `docs/probing.md`).
 - **A motion that repeats runs on the window's clock** (`ambient::phase`), never `Animation::repeat`.
 - **Nothing slow is asked while a frame is built, and the main thread never waits.** A hover draws the window whole, so what `render` calls runs at every hover: what the system has is found once, at launch (`fonts::install`). A wait on the main thread holds every frame and event, and a motion that was under way appears whole: a lock a model holds, a large file, a sound go to a thread of their own. A list that grows with use draws what is in view. Speed is measured before and after (`docs/probing.md`, Measuring), and every optimization pass is logged (`docs/optimize.md`).
 - **Every scroller that goes up and down names itself** to the router as it is drawn (`Scrollers::name`), or a flick in it scrolls whatever the pointer reaches next.
@@ -26,7 +28,7 @@ crates/starter-app/        the window
   src/main.rs                menus, key bindings, the main window
   src/shell.rs               the main view: frame, sidebar, card, the sample page
   src/settings.rs            the settings window: rail, group, line
-  src/widgets.rs             the shared drawing: choice_pill, key_text, tip, page_in, Motion
+  src/widgets.rs             the shared drawing: choice_pill, key_text, tip, page_in, round_corners, Motion
   src/menu.rs                the app's own menu, in and out in motion
   src/scroll.rs              a gesture stays in the scroller it began in
   src/ambient.rs             the window's clock
@@ -41,7 +43,7 @@ crates/starter-app/        the window
   assets/ themes/ locales/   icons, fonts, the app icon; the palette; the words
   macos/ windows/ linux/     what each system's package needs
 vendor/                    the toolkit and the blocks crate, each with an UPSTREAM.md
-scripts/                   the dev build, the icon, the README's picture (make-readme-gif.sh, readme/), the release
+scripts/                   the dev build, the icon, the README's picture (make-readme-gif.sh, readme/), the release, the checks on a press and a corner (press-diff.R, corners.R)
 docs/                      release.md, probing.md, optimize.md (the optimization passes and their log)
 ```
 

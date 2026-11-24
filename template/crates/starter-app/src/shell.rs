@@ -27,7 +27,7 @@ use crate::i18n::{count, t, tf};
 use crate::menu::{Entry, Menus};
 use crate::scroll::Scrollers;
 use crate::ui_state::{Rect, UiState};
-use crate::widgets::{choice_pill, page_in, small_pill, tip, Motion, Press, FOLD_ANIM, SLIDE};
+use crate::widgets::{choice_pill, page_in, round_corners, small_pill, tip, Motion, Press, FOLD_ANIM, SLIDE};
 
 actions!(starter, [ToggleSidebar, OpenSettings, Escape]);
 
@@ -53,6 +53,10 @@ pub const MIN_W: Pixels = px(720.);
 
 /// How long a working mark takes to go round once.
 const TURN: Duration = Duration::from_millis(1100);
+/// Start and Stop's pill, and the mark at work beside it: each one width
+/// in both states and every language, so the press moves nothing.
+const WORK_W: Pixels = px(104.);
+const WORKING_W: Pixels = px(31.);
 
 pub struct Shell {
     pub(crate) cfg: Config,
@@ -85,14 +89,25 @@ pub struct Shell {
     pub(crate) update: UpdateRow,
 }
 
-/// What the Updates row says and does.
+/// What the Updates row's button says and does. Every state is a label
+/// on the one button, in its fixed width: nothing is added under the row.
 #[derive(Default, Clone)]
 pub(crate) struct UpdateRow {
     pub checking: bool,
     pub found: Option<String>,
     /// While a download runs: how far, from 0 to 100.
     pub downloading: Option<u32>,
-    pub said: Option<String>,
+    /// How the last check or install ended, until the next press.
+    pub outcome: Option<Outcome>,
+}
+
+/// How a check or an install ended: the button's label, and on a failure
+/// the reason, in its tooltip.
+#[derive(Clone)]
+pub(crate) enum Outcome {
+    UpToDate,
+    CheckFailed(String),
+    InstallFailed(String),
 }
 
 impl Shell {
@@ -371,12 +386,14 @@ impl Shell {
     /// drawn about 30 times a second while it does and not at all after.
     fn render_working(&self, cx: &App) -> AnyElement {
         let theme = cx.theme();
+        // One width at work and at rest, so Start's press moves nothing.
         if !self.working {
-            return div().size(px(16.)).into_any_element();
+            return div().w(WORKING_W).h(px(16.)).into_any_element();
         }
         let turn = ambient::phase(TURN);
         let breath = ambient::pulse(0.35, 1., ambient::phase(TURN * 2));
         h_flex()
+            .w(WORKING_W)
             .gap(px(8.))
             .items_center()
             .child(Icon::default().path("icons/loader-circle.svg").with_size(px(16.)).text_color(theme.primary).rotate(percentage(turn)))
@@ -429,7 +446,7 @@ impl Shell {
         let working = h_flex()
             .gap(px(10.))
             .items_center()
-            .child(small_pill("work", if self.working { "icons/pause.svg" } else { "icons/play.svg" }, if self.working { t("Stop") } else { t("Start") }, Press::Quiet, false, &theme).on_click(cx.listener(|this, _, _, cx| {
+            .child(small_pill("work", if self.working { "icons/pause.svg" } else { "icons/play.svg" }, if self.working { t("Stop") } else { t("Start") }, Press::Quiet, false, &theme).w(WORK_W).justify_center().on_click(cx.listener(|this, _, _, cx| {
                 this.working = !this.working;
                 cx.notify();
             })))
@@ -477,7 +494,9 @@ impl Shell {
             .border_color(theme.border)
             .overflow_hidden()
             .child(v_flex().id("box").size_full().overflow_y_scroll().track_scroll(&self.box_scroll).children(rows))
-            .vertical_scrollbar(&self.box_scroll);
+            .vertical_scrollbar(&self.box_scroll)
+            // A row's ground and its line reach the corners as it scrolls.
+            .child(round_corners(px(12.), theme.background, Some(theme.border)));
         let _ = window;
         v_flex()
             .w(CONTENT_W)
@@ -526,7 +545,7 @@ impl Shell {
     /// Ask for the newest version, off the main thread.
     pub(crate) fn check_updates(&mut self, cx: &mut Context<Self>) {
         self.update.checking = true;
-        self.update.said = None;
+        self.update.outcome = None;
         cx.notify();
         let task = cx.background_executor().spawn(async { update::latest() });
         cx.spawn(async move |this, cx| {
@@ -541,10 +560,10 @@ impl Shell {
                             this.update.found = Some(latest);
                         } else {
                             this.update.found = None;
-                            this.update.said = Some(t("Up to date.").into());
+                            this.update.outcome = Some(Outcome::UpToDate);
                         }
                     }
-                    Err(e) => this.update.said = Some(tf("The check did not go through: {why}", &[("why", &e)])),
+                    Err(e) => this.update.outcome = Some(Outcome::CheckFailed(tf("The check did not go through: {why}", &[("why", &e)]))),
                 }
                 cx.notify();
             });
@@ -557,6 +576,7 @@ impl Shell {
     pub(crate) fn install_update(&mut self, cx: &mut Context<Self>) {
         let Some(version) = self.update.found.clone() else { return };
         self.update.downloading = Some(0);
+        self.update.outcome = None;
         cx.notify();
         let (tx, rx) = std::sync::mpsc::channel::<u32>();
         let task = cx.background_executor().spawn(async move {
@@ -587,7 +607,7 @@ impl Shell {
                 this.update.downloading = None;
                 match done {
                     Ok(()) => cx.quit(),
-                    Err(e) => this.update.said = Some(tf("The update did not go through: {e}", &[("e", &e)])),
+                    Err(e) => this.update.outcome = Some(Outcome::InstallFailed(tf("The update did not go through: {e}", &[("e", &e)]))),
                 }
                 cx.notify();
             });
@@ -667,7 +687,10 @@ impl Render for Shell {
                     .children(edge_fade(&self.page_scroll, theme.background, true))
                     .children(edge_fade(&self.page_scroll, theme.background, false))
                     .vertical_scrollbar(&self.page_scroll),
-            );
+            )
+            // The bottom fade and the page under it reach the card's
+            // corners; the frame is laid back over their outsides.
+            .child(round_corners(CARD_R, frame, None));
         let pick = Rc::new(|this: &mut Self, what: &'static str, id: SharedString, window: &mut Window, cx: &mut Context<Self>| this.menu_pick(what, id, window, cx));
         let close = Rc::new(|this: &mut Self, cx: &mut Context<Self>| {
             this.pressed_row = None;
@@ -769,6 +792,21 @@ impl Shell {
                 // A newer version waits, as a check finding one says: the
                 // gear's and About's dots. Nothing is fetched.
                 "updatefound" => self.update.found = Some("9.9.9".into()),
+                // The Updates button's own press: a real check, fetched.
+                "check" => self.check_updates(cx),
+                // Each state the Updates button comes to after a press;
+                // nothing is fetched.
+                "checking" => self.update.checking = true,
+                "uptodate" => self.update.outcome = Some(Outcome::UpToDate),
+                "checkfailed" => self.update.outcome = Some(Outcome::CheckFailed(tf("The check did not go through: {why}", &[("why", &"GitHub answered 404")]))),
+                "downloading" => {
+                    self.update.found = Some("9.9.9".into());
+                    self.update.downloading = Some(100);
+                }
+                "installfailed" => {
+                    self.update.found = Some("9.9.9".into());
+                    self.update.outcome = Some(Outcome::InstallFailed(tf("The update did not go through: {e}", &[("e", &"the disk image could not be opened")])));
+                }
                 "menu" => {
                     self.pressed_row = Some(2);
                     self.menus.show("row", point(px(420.), px(560.)), vec![Entry::choice("open", "icons/external-link.svg", t("Open")), Entry::Rule, Entry::choice("copy", "icons/copy.svg", t("Copy Name")), Entry::choice("delete", "icons/trash.svg", t("Delete"))]);
