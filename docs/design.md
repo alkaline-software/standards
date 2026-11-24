@@ -255,7 +255,7 @@ The window opens at 860 by 600 in every product, whatever its sections, so the s
 - **A field** sits in a wrapper that tracks the focus and carries the text role, so keys and assistive apps reach it. A field that grows with what is typed changes the page's length: a long text scrolls inside itself at a height the page leaves it.
 - **A hover's label** is the toolkit's managed tooltip, which comes in and slides to the next element on the row, never the plain tooltip that jumps in and out; a row with both read as two kinds of control.
 - **A scroller**, every one, has the toolkit's bar and keeps its own gesture (Scrollers).
-- **A notice** (something refused, a model to download first) opens down from the section's title and closes after a while.
+- **A notice** (something refused, a model to download first) takes no room from the page: it stands in room the window has in every state (the top bar between the section's name and its right end), or hangs over the page as a pill that pushes nothing. It goes after a while or at a click. It is two lines at most, the whole of it in its tooltip. Opened down from the section's title, it pushed the page down at the press that asked for it (A press moves nothing).
 - **A sheet over the window** (a list to edit, a history, a rename) is smaller than the window both ways, on a scrim any click or Escape puts away, rising in as it fades in and fading out where it was. The sheet occludes, not only its scrim, or a press in the sheet let go outside it closes it.
 - **A menu** at a right click is the product's own card at the pointer, kept inside the window, over a clear sheet any click or Escape puts away: each choice with an icon before its words, choices of one kind together with a line between the groups (what opens the thing, what it gives the clipboard, what changes it), the card as wide as its longest choice and no wider, so the room at its right is the room at its left. A text input offers Cut, Copy, Paste and Select All the same way, each with its icon.
 - **A key** shown anywhere is on a cap (Icons in the window).
@@ -341,7 +341,7 @@ A fade's curve must fit its length: a curve made for a longer fade held the scro
 - **A scroll a click starts** (an arrow, "Show", "New messages") runs from where the scroller is, a share of what is left each frame, so it slows onto the place. Never a jump straight to it.
 - **What runs past an edge of a sideways scroller** fades into the ground there, and the fade comes and goes with there being more that way. What is cut says so and can be reached.
 - **Each page's content fades in** when it arrives, keyed on the page; a section's name fades with its page; a window changing its language fades into the new one.
-- **A notice** opens down from a title and closes after a while.
+- **A notice** fades in where it stands and fades out after a while; nothing around it moves.
 - **A card on a site rises** as it comes into view, once; a figure winds under the pointer and follows on a spring, a little past and back, and goes to rest when the pointer leaves, asking for a frame only while it moves.
 
 ### No pause at the end
