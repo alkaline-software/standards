@@ -1,4 +1,4 @@
-# The Alkaline Software constitution
+# The Alkaline Software standards
 
 The standards the studio's products are built to: six documents under `docs/`, and `template/`, a product that holds them as code.
 
@@ -24,7 +24,7 @@ scripts/new-product.sh ../<folder> <Name> <bundle id> <owner/repo>
 
 copies `template/` to a folder of its own and renames every name Starter has. Then: replace the sample page (`Shell::render_page` in `shell.rs`), draw the product's icon in `scripts/icon/icon.html` and run `scripts/make-icon.sh`, and write the product's `docs/design.md` and `docs/platform.md` from this repository's, in the product's own terms (its accent, its icon's subject, its window, its parts), with what does not apply left out. From then on the product's own docs are its standard, and nothing in the product points back here: this is a template, not a dependency.
 
-**With an agent.** Point it at this repository and at the folder to start in ("make a product called X from the constitution, then build Y in it"). The documents are written for someone who can build software, with the reason beside each rule, so an agent applies them without being told what each is for.
+**With an agent.** Point it at this repository and at the folder to start in ("make a product called X from the standards, then build Y in it"). The documents are written for someone who can build software, with the reason beside each rule, so an agent applies them without being told what each is for.
 
 **Working on a product that exists.** Read the product's own docs; they are its standard. Come here for the studio's reasoning behind a rule.
 

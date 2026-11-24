@@ -2,7 +2,7 @@
 
 ## What this is
 
-The constitution of **Alkaline Software**: the standards the studio's products are built to, kept in one place so the next product starts where the last one got to. Six documents under `docs/` say what the standard is and why; `template/` is the standard as a product that builds, tests and runs.
+The standards of **Alkaline Software**: what the studio's products are built to, kept in one place so the next product starts where the last one got to. Six documents under `docs/` say what the standard is and why; `template/` is the standard as a product that builds, tests and runs.
 
 It is a template, not a dependency. A new product is made from `template/` by `scripts/new-product.sh`; once the product has its own docs, those docs are its whole standard and nothing in the product points back here.
 
